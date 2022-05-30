@@ -3,4 +3,4 @@
 ## Contributors
 
 - [hatersDuck](https://vk.com/hatersduck)
-- [Кирилл](https://vk.com/q4b668f75)
+- [Krulia](https://vk.com/q4b668f75)
