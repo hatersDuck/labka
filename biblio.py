@@ -6,7 +6,7 @@
     [3] - Статья
 """
 import re
-from tabnanny import check
+
 def biblio(sourse: str) -> str: 
     check = [
         1,1,1,1
@@ -17,7 +17,7 @@ def biblio(sourse: str) -> str:
     if (number is None):
         return "Не правильно оформленна нумерация"
     if (re.search("\s{2,}", sourse) is not None):
-        return f"{number}\tДва и более пробела в одном месте не уместны"
+        return f"{number}\tДва и более пробела в одном месте не уместны"   #or sourse.replace("  "," ")
 
     if ("".join(i for i in text[-1:-3:-1] if i.upper() == 'С.') == ""):
 
@@ -37,7 +37,7 @@ def biblio(sourse: str) -> str:
     if (check[0]):
         return book(sourse)
     if (check[1]):
-        pass
+        return internetRes(sourse)
     if (check[2]):
         pass
     if (check[3]):
@@ -70,7 +70,7 @@ def checkFio(sourse, templateFIO, num, start = 0):
     if (len(authors) > 3):
         if (sourse.find("и др.") < 0):
             return f"{num}\t Если авторов более 3-х, то отмечают первых трёх, затем пишется [и др.] или просто 'и др.'"
-    return None, start, authors
+    return None, start
 
 def book (sourse: str):
     text = sourse.split()
@@ -79,6 +79,7 @@ def book (sourse: str):
     sourse = sourse[sourse.find('.') + 2:-1]
     
     exc, start = checkFio(sourse, ["[А-Я][а-я]+\s[А-Я]\.\s[A-Я]\.", "[А-Я][а-я]+\s[А-Я]\.[A-Я]\.", "[А-Я][а-я]+\s[А-Я]\."], text[0])
+
     if (exc is not None):
         return exc
     template = ',\s\d{4}(?=\.\s[\-–]|\s[(])'
@@ -117,8 +118,32 @@ def book (sourse: str):
         check = False
     if (check):
         return f"{text[0]}\tНазвание или издательство записаны неверно"
-    
+    return f"{text[0]}\tОформлен в соответсвие с правилами"
 
+import urllib.request
+def checkURL(fullText:str):
+    dataCall = re.search("[(]дата обращения: \d{2}\.\d{2}\.\d{4}[)].", fullText)
+    if (dataCall is None):
+        return "Дата обращения не найдена или оформлена не правильно", ""
+    template = ".\s[-–]\sURL: (?P<url>https?://[^\s]+)"
+    fullURL = re.search(template,fullText)
+    if (fullURL is not None):
+        URL = fullURL.group("url")
+    try:
+        urllib.request.urlopen(URL).getcode()
+    except:
+        return f"Сайт не доступен в данный момент либо указан неверно", ""
+    fullText = fullText.replace(fullURL[0] + " " + dataCall[0],"")
+    return None, fullText
+
+
+def internetRes(sourse: str):
+    num = sourse[0:sourse.find('.')]
+    exc, sourse = checkURL(sourse)
+    if (exc is not None):
+        return num + "\t" + exc
+    #Не проверяется название.
+    return f"{num}\tОформлен в соответсвие с правилами"
 
 
 # « »  
@@ -129,7 +154,7 @@ testStrings = (
     "1. Первушкин В. И. Губернские статистические комитеты и провинциальная историческая наука / Под ред. В. И. Первушкин. – Пенза: ПГПУ, 2007. – 214 с.",
     "99. Ставицкий В. В. Неолит – ранний энеолит лесостепного Посурья и Прихоперья / Под ред. В.В. Ставицкий, А.А. Хреков. – Саратов: Изд-во Сарат. ун-та, 2003 (Тип. Изд-ва). – 166 с.",
     "155. Кравцова Н. А. Актуальные проблемы современной психосоматики // Человек и современный мир. – 2018. – № 11 (24). – С. 3-10.",
-    "122. Оформление списка литературы проектной работы [Электронный ресурс]. – URL: https://workproekt.ru/oformlenie-proekta/oformlenie-spiska-literaturyi/ (дата обращения: 31.05.2022).",
+    "122. Оформление списка литературы проектной работы [Электронный ресурс]. – URL: https://wokproekt.ru/oformlenie-proekta/oformlenie-spiska-literaturyi/ (дата обращения: 31.05.2022).",
     "22. Апажева С.С., Баразбиев М., Геграев Х.К. Организация досуга молодежи: учебник. – Нальчик: КБГУ им. Х.М. Бербекова, 2017. – 134 с."
 )
 
