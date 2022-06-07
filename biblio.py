@@ -1,20 +1,22 @@
-
 """
     [0] - Книга
     [1] - Интернет-ресурс
     [2] - Закон, нормативный акт и т.п.
     [3] - Статья
 """
+import re
+
 def biblio(sourse: str) -> str: 
     check = [
         1,1,1,1
     ]
-
+    #Не идеальный алгоритм надо менять сто проц
     text = sourse.split()
     number = (text[0] if (text[0][0:4].find('.')>0) else None)
-
     if (number is None):
         return "Не правильно оформленна нумерация"
+    if (re.search("\s{2,}", sourse) is not None):
+        return f"{number}\tДва и более пробела в одном месте не уместны"   #or sourse.replace("  "," ")
 
     if ("".join(i for i in text[-1:-3:-1] if i.upper() == 'С.') == ""):
 
@@ -30,58 +32,129 @@ def biblio(sourse: str) -> str:
             check[0] = 0
         if (text[-1] == 'с.'):
             check[3] = 0
+
     if (check[0]):
         return book(sourse)
     if (check[1]):
-        pass
+        return internetRes(sourse)
     if (check[2]):
         pass
     if (check[3]):
         pass
-    return number + " не удалось определить тип источника"
+    return f"{number}\tНе удалось определить тип источника"
 
 
 import pymorphy2
-import re
-def book (sourse: str):
-    morph = pymorphy2.MorphAnalyzer(lang='ru')
-    text = sourse.split()
-    sourse = sourse[sourse.find('.') + 1:-1]
-    
-    
-    templateName = ["\w+\s[А-ЯЁ]\.\s[A-ЯЁ]\.", "\w+\s[А-ЯЁ]\.[A-ЯЁ]\."] #Фамилия И. О. или Фамилия И.О.
-    templates = [
-        [templateName[0], templateName[1]], 
-        [templateName[0] + ',', templateName[1] + ',']
-    ]
-    templates.append([
-        templates[1][0] + "\s" + templates[0][0],
-        templates[1][1] + "\s" + templates[0][1]
-        ])
-    templates.append([
-        templates[1][0] + "\s" + templates[1][0] + "\s" + templates[0][0], 
-        templates[1][1] + "\s" + templates[1][1] + "\s" + templates[0][1]
-        ])
 
+def checkFio(sourse, templateFIO, num, start = 0):
     authors = []
-    temp = 0
-    for i, patt in enumerate(templates):
-        authors.append(re.search(patt[0], sourse) if re.search(patt[0], sourse) is not None else re.search(patt[1], sourse))
-        if (authors[i] is not None):
-            if (authors[i].span()[0] != 1):
-                return "Ошибка в записи '{text[0]} Фамилия И.О.'"
-        if (authors[i] is None): temp += 1
-    if (temp > 3): return text[0] + " ошибка в записи Фамилия И.О."
-    name = sourse.find("и др.", authors[4].span()[1])
+    check = start
+    while(True):
+        for i in range(len(templateFIO)):
+            temp = re.search(templateFIO[i], sourse[start:-1])
+            if (temp is not None):
+                if (temp.span()[0] > 2):
+                    continue
+                authors.append(temp[0])
+                start += temp.span()[1]
+                break
+        if (check == start):
+            break
+        else: check = start
 
+    if (len(authors) == 0):
+        return f"{num}\tУ книги должен быть автор или Фамилия И.О. записаны не правильно"
+    if (sourse[0:start].count(',') != len(authors) - 1):
+        return f"{num}\tМежду фамилиями должны быть запятые"
+    if (len(authors) > 3):
+        if (sourse.find("и др.") < 0):
+            return f"{num}\t Если авторов более 3-х, то отмечают первых трёх, затем пишется [и др.] или просто 'и др.'"
+    return None, start
+
+def book (sourse: str):
+    text = sourse.split()
+    if (sourse[sourse.find('.') + 1] != ' '):
+        return f"{text[0]}\tПробел после {text[0]} обязателен"
+    sourse = sourse[sourse.find('.') + 2:-1]
     
-        
+    exc, start = checkFio(sourse, ["[А-Я][а-я]+\s[А-Я]\.\s[A-Я]\.", "[А-Я][а-я]+\s[А-Я]\.[A-Я]\.", "[А-Я][а-я]+\s[А-Я]\."], text[0])
+
+    if (exc is not None):
+        return exc
+    template = ',\s\d{4}(?=\.\s[\-–]|\s[(])'
+    age = re.search(template, sourse)
+    pages = re.search("\.\s[\-–]\s\d{1,}\s",sourse[age.span()[0]:-1])
+    if (pages is None):
+        return f"{text[0]}\tСтраницы указаны не верно"
+    if (age is None):
+        return f"{text[0]}\tНе указан или не правильно оформлен год выпуска"
+    title = sourse[start:age.span()[0]]
+    city = title[title.rfind('. -') if (title.rfind('. -')>0) else title.rfind('. –'):len(title)]
+    cityReduce = {
+        'Москва': 'М.',
+        'Ленинград':'Л.', 
+        'Санкт-Петербург':'СПб', 
+        'Нижний Новгород':"Н. Новогород", 
+        'Ростов-на-Дону':"Ростов н/Д"
+    }
+    for i in cityReduce:
+        if (city.find(i) > 0):
+            return f"{text[0]}\t{i} необходимо сократить до {cityReduce[i]}"
+    if (city == "" or city.find(':') < 0):
+        return f"{text[0]}\tМесто издания должно быть указано корректно"
+    
+    title = title.replace(city, '')
+    check = True
+    if (title.rfind('/ Под ред.') > 0):
+        exc, start = checkFio(title, ["[А-Я]\.\s[A-Я]\.\s[А-Я][а-я]+", "[А-Я]\.[A-Я]\.\s[А-Я][а-я]+"], text[0], start = title.rfind('/ Под ред.') + len('/ Под ред.'))
+        if (exc is not None):
+            return exc
+        check = False
+    if (title.rfind(':') > 0):
+        publish = ['учебник', "монография", "учеб. пособие"]
+        if not(publish[0] in title or publish[1] in title or publish[2] in title):
+            return f"{text[0]}\tТип книги {publish} не найден"
+        check = False
+    if (check):
+        return f"{text[0]}\tНазвание или издательство записаны неверно"
+    return f"{text[0]}\tОформлен в соответсвие с правилами"
+
+import urllib.request
+def checkURL(fullText:str):
+    dataCall = re.search("[(]дата обращения: \d{2}\.\d{2}\.\d{4}[)].", fullText)
+    if (dataCall is None):
+        return "Дата обращения не найдена или оформлена не правильно", ""
+    template = ".\s[-–]\sURL: (?P<url>https?://[^\s]+)"
+    fullURL = re.search(template,fullText)
+    if (fullURL is not None):
+        URL = fullURL.group("url")
+    try:
+        urllib.request.urlopen(URL).getcode()
+    except:
+        return f"Сайт не доступен в данный момент либо указан неверно", ""
+    fullText = fullText.replace(fullURL[0] + " " + dataCall[0],"")
+    return None, fullText
+
+
+def internetRes(sourse: str):
+    num = sourse[0:sourse.find('.')]
+    exc, sourse = checkURL(sourse)
+    if (exc is not None):
+        return num + "\t" + exc
+    #Не проверяется название.
+    return f"{num}\tОформлен в соответсвие с правилами"
+
+
+# « »  
+    
+    
+
 testStrings = (
-    "1. Первушкин В. И. Губернские статистические комитеты и провинциальная историческая наука / В. И. Первушкин. – Пенза: ПГПУ, 2007. – 214 с.",
-    "99.  Ставицкий В. В.  Неолит – ранний энеолит лесостепного Посурья и Прихоперья / В.В. Ставицкий, А.А. Хреков. – Саратов: Изд-во Сарат. ун-та, 2003 (Тип. Изд-ва). – 166 с.",
+    "1. Первушкин В. И. Губернские статистические комитеты и провинциальная историческая наука / Под ред. В. И. Первушкин. – Пенза: ПГПУ, 2007. – 214 с.",
+    "99. Ставицкий В. В. Неолит – ранний энеолит лесостепного Посурья и Прихоперья / Под ред. В.В. Ставицкий, А.А. Хреков. – Саратов: Изд-во Сарат. ун-та, 2003 (Тип. Изд-ва). – 166 с.",
     "155. Кравцова Н. А. Актуальные проблемы современной психосоматики // Человек и современный мир. – 2018. – № 11 (24). – С. 3-10.",
-    "122. Оформление списка литературы проектной работы [Электронный ресурс]. – URL: https://workproekt.ru/oformlenie-proekta/oformlenie-spiska-literaturyi/ (дата обращения: 31.05.2022).",
-    "22. Апажева С.С., Баразбиев М.И., Геграев Х.К. Организация досуга молодежи: учебник. – Нальчик: КБГУ им. Х.М. Бербекова, 2017. – 134 с."
+    "122. Оформление списка литературы проектной работы [Электронный ресурс]. – URL: https://wokproekt.ru/oformlenie-proekta/oformlenie-spiska-literaturyi/ (дата обращения: 31.05.2022).",
+    "22. Апажева С.С., Баразбиев М., Геграев Х.К. Организация досуга молодежи: учебник. – Нальчик: КБГУ им. Х.М. Бербекова, 2017. – 134 с."
 )
 
 testArr = (

@@ -4,8 +4,8 @@ import re
 def find_par(document, text):
     num_par = 0
     for paragraph in document.paragraphs:
-        if (text in paragraph.text):
-            if ((len(paragraph.text) - len(text)) <= 1):
+        if (text in paragraph.text.strip()):
+            if ((len(paragraph.text.strip()) - len(text)) == 0):
                 return num_par
         num_par = num_par + 1
     return -1
