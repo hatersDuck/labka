@@ -10,8 +10,8 @@ def find_par(document, text):
         num_par = num_par + 1
     return -1
 
-def find_biblio():
-    document = Document("d:/Сибгути/1 курс/Экономика/Курсовая Дефицит бюджета (ИИ-051 Носков Кирилл).docx") #изменить путь в передаваемую переменную
+def find_biblio(path):
+    document = Document(path) #изменить путь в передаваемую переменную
 
     i = 0
     text = 'Список литературы'
@@ -36,8 +36,10 @@ def find_biblio():
             if i == maxi:
                 flg = 1
             i = i + 1
-        return k 
+        return k.split('\n') 
 
 ####### строки ниже только для проверки!!!
-l = find_biblio() 
-print(l)   
+filePath = "/home/danila/Downloads/pz2(Изменил пункт 10).docx"
+l = find_biblio(filePath) 
+for i in l:
+    print(i)
