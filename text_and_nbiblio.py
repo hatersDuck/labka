@@ -22,6 +22,7 @@ def text_and_nbiblio(way):
     num_abzac = 0
     abz = ''
     temp = ''
+    j = 0
     text_biblio = []
     for paragraph in document.paragraphs:
         if (zagl[num_abzac] == re.sub("[0-9]+|[\.]", "", paragraph.text).strip()):
@@ -34,11 +35,14 @@ def text_and_nbiblio(way):
             while i < len(abz):
                 if abz[i] == '[':
                     bool = 1
-                    text_biblio.append(temp)
+                    text_biblio.append(['',''])
+                    text_biblio[j][1] = temp
                     temp = ''
                 elif abz[i] == ']':
                     bool = 0
-                    text_biblio.append(temp)
+                    text_biblio.append(['',''])
+                    text_biblio[j][0] = temp
+                    j = j+1
                     temp = ''
                     i = i+1
                 else:
