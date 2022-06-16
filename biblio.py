@@ -6,144 +6,186 @@
     [3] - Статья
 """
 import re
-
-def biblio(sourse: str) -> str: 
-    check = [
-        1,1,1,1
-    ]
-    #Не идеальный алгоритм надо менять сто проц
-    text = sourse.split()
-    number = (text[0] if (text[0][0:4].find('.')>0) else None)
-    if (number is None):
-        return "Не правильно оформленна нумерация"
-    if (re.search("\s{2,}", sourse) is not None):
-        return f"{number}\tДва и более пробела в одном месте не уместны"   #or sourse.replace("  "," ")
-
-    if ("".join(i for i in text[-1:-3:-1] if i.upper() == 'С.') == ""):
-
-        for i in (0, 3): check[i] = 0
-        if (sourse.lower().find('закон') > 0 or sourse.lower().find('приказ') > 0):
-            check[1] = 0
-        else: check[2] = 0
-
-    else:
-        for i in (1,2): check[i] = 0
-      
-        if (sourse.find(' // ') > 0):
-            check[0] = 0
-        if (text[-1] == 'с.'):
-            check[3] = 0
-
-    if (check[0]):
-        return book(sourse)
-    if (check[1]):
-        return internetRes(sourse)
-    if (check[2]):
-        pass
-    if (check[3]):
-        pass
-    return f"{number}\tНе удалось определить тип источника"
-
-
-import pymorphy2
-
-def checkFio(sourse, templateFIO, num, start = 0):
-    authors = []
-    check = start
-    while(True):
-        for i in range(len(templateFIO)):
-            temp = re.search(templateFIO[i], sourse[start:-1])
-            if (temp is not None):
-                if (temp.span()[0] > 2):
-                    continue
-                authors.append(temp[0])
-                start += temp.span()[1]
-                break
-        if (check == start):
-            break
-        else: check = start
-
-    if (len(authors) == 0):
-        return f"{num}\tУ книги должен быть автор или Фамилия И.О. записаны не правильно"
-    if (sourse[0:start].count(',') != len(authors) - 1):
-        return f"{num}\tМежду фамилиями должны быть запятые"
-    if (len(authors) > 3):
-        if (sourse.find("и др.") < 0):
-            return f"{num}\t Если авторов более 3-х, то отмечают первых трёх, затем пишется [и др.] или просто 'и др.'"
-    return None, start
-
-def book (sourse: str):
-    text = sourse.split()
-    if (sourse[sourse.find('.') + 1] != ' '):
-        return f"{text[0]}\tПробел после {text[0]} обязателен"
-    sourse = sourse[sourse.find('.') + 2:-1]
-    
-    exc, start = checkFio(sourse, ["[А-Я][а-я]+\s[А-Я]\.\s[A-Я]\.", "[А-Я][а-я]+\s[А-Я]\.[A-Я]\.", "[А-Я][а-я]+\s[А-Я]\."], text[0])
-
-    if (exc is not None):
-        return exc
-    template = ',\s\d{4}(?=\.\s[\-–]|\s[(])'
-    age = re.search(template, sourse)
-    pages = re.search("\.\s[\-–]\s\d{1,}\s",sourse[age.span()[0]:-1])
-    if (pages is None):
-        return f"{text[0]}\tСтраницы указаны не верно"
-    if (age is None):
-        return f"{text[0]}\tНе указан или не правильно оформлен год выпуска"
-    title = sourse[start:age.span()[0]]
-    city = title[title.rfind('. -') if (title.rfind('. -')>0) else title.rfind('. –'):len(title)]
-    cityReduce = {
-        'Москва': 'М.',
-        'Ленинград':'Л.', 
-        'Санкт-Петербург':'СПб', 
-        'Нижний Новгород':"Н. Новогород", 
-        'Ростов-на-Дону':"Ростов н/Д"
-    }
-    for i in cityReduce:
-        if (city.find(i) > 0):
-            return f"{text[0]}\t{i} необходимо сократить до {cityReduce[i]}"
-    if (city == "" or city.find(':') < 0):
-        return f"{text[0]}\tМесто издания должно быть указано корректно"
-    
-    title = title.replace(city, '')
-    check = True
-    if (title.rfind('/ Под ред.') > 0):
-        exc, start = checkFio(title, ["[А-Я]\.\s[A-Я]\.\s[А-Я][а-я]+", "[А-Я]\.[A-Я]\.\s[А-Я][а-я]+"], text[0], start = title.rfind('/ Под ред.') + len('/ Под ред.'))
-        if (exc is not None):
-            return exc
-        check = False
-    if (title.rfind(':') > 0):
-        publish = ['учебник', "монография", "учеб. пособие"]
-        if not(publish[0] in title or publish[1] in title or publish[2] in title):
-            return f"{text[0]}\tТип книги {publish} не найден"
-        check = False
-    if (check):
-        return f"{text[0]}\tНазвание или издательство записаны неверно"
-    return f"{text[0]}\tОформлен в соответсвие с правилами"
-
 import urllib.request
-def checkURL(fullText:str):
-    dataCall = re.search("[(]дата обращения: \d{2}\.\d{2}\.\d{4}[)].", fullText)
-    if (dataCall is None):
-        return "Дата обращения не найдена или оформлена не правильно", ""
-    template = ".\s[-–]\sURL: (?P<url>https?://[^\s]+)"
-    fullURL = re.search(template,fullText)
-    if (fullURL is not None):
-        URL = fullURL.group("url")
-    try:
-        urllib.request.urlopen(URL).getcode()
-    except:
-        return f"Сайт не доступен в данный момент либо указан неверно", ""
-    fullText = fullText.replace(fullURL[0] + " " + dataCall[0],"")
-    return None, fullText
+class biblio(object):
+    def __init__(self, sourse):
+        
+        self.type = [
+            1,1,1,1
+        ]
+        self.sourse = sourse
+        text = sourse.split()
+        self.number = re.match(r"\d{1,}\.",sourse)[0]
+        self.fails = []
+
+        if (self.number is None):
+            self.fails.append("Не правильно оформленна нумерация")
+            self.number = '-1.'
+
+        if (re.search("\s{2,}", sourse) is not None):
+            self.fails.append(f"Два и более пробела в одном месте")
+            self.sourse.replace("  ", " ")
+        
+        #############################################
+        # Выявление типа                            #
+        # Сделанно чересчур просто, много проблем,  #
+        # необходимо найти более эффективный способ #
+        #############################################
+
+        if (re.search(r"–(\s\d{1,})*\sс\.\s*", sourse.lower()) is None):
+            for i in (0, 3): self.type[i] = 0
+            # Мало эффективный способ
+            if (sourse.lower().find('закон') > 0 or sourse.lower().find('приказ') > 0):
+                self.type[1] = 0
+            else: self.type[2] = 0
+        else:
+            for i in (1,2): self.type[i] = 0
+            if (sourse.find(' // ') > 0):
+                self.type[0] = 0
+            if (text[-1] == 'с.'):
+                self.type[3] = 0
+
+        for i in (1,2): #Для быстрой остановки инициализации
+            if (sum(self.type) > 1 or not(any(self.type))):
+                self.type = None
+                break
+            if (self.type[0]):
+                self.type = "Книга"
+                self.__book()
+                break
+
+            if (self.type[1]):
+                self.type = "Интернет-ресурс"
+                break
+
+            if (self.type[2]):
+                self.type = "Закон, нормативный акт и т.п."
+                break
+
+            if (self.type[3]):
+                self.type = "Статья в журнале, газете и т.п."
+                break
+                
+    def getFails(self)->str:
+        num = f"{self.number}\t"
+        if (len(self.fails) == 0 and isinstance(self.type, str)):
+            return num + f"Ошибок не найдено"
+        elif (len(self.fails) == 0):
+            return num + "Не удалось определить тип"
+        return num + "\n\t".join(self.fails)
+
+    def __str__(self) -> str:
+        msg = ""
+        for i in self.__dict__:
+            match i:
+                case "type":
+                    msg += f"Тип: {self.type}\n"
+                case "number":
+                    msg += f"№{self.number[:-1]}\n"
+                case "fails":
+                    pass
+                case "age":
+                    msg += f"{self.type} написана в {self.age[0][2:]} г.\n"
+                case "title":
+                    msg += f"Название:{self.title}"
+
+        return msg
+
+    ######################
+    #Блок проверок типов #
+    ######################
+    def __checkFIO(self, templateFIO, start = 0) -> None:
+        authors = []
+        check = start
+         
+        while(True):
+            for i in range(len(templateFIO)):
+                temp = re.search(templateFIO[i], self.sourse[start:-1])
+                if (temp is not None):
+                    if (temp.span()[0] > 2):
+                        continue
+                    authors.append(temp[0])
+                    start += temp.span()[1]
+                    break
+            if (check == start):
+                break
+            else: check = start
+        
+        if (len(authors) == 0):
+            self.fails.append("У книги должен быть автор или Фамилия И.О. записаны не правильно")
+        if (self.sourse[0:start].count(',') != len(authors) - 1):
+            self.fails.append("Между фамилиями должны быть запятые")
+        if (len(authors) > 3):
+            if (self.sourse.find("и др.") < 0):
+                self.fails.append("Если авторов более 3-х, то отмечают первых трёх, затем пишется [и др.] или просто 'и др.'")
+        return start
+
+    def __book (self):
+        text = self.sourse.split()
+        if (self.sourse[self.sourse.find('.') + 1] != ' '):
+            self.fails.append("Пробел после {text[0]} обязателен")
+        
+        start = self.__checkFIO(["[А-Я][а-я]+\s[А-Я]\.\s[A-Я]\.", "[А-Я][а-я]+\s[А-Я]\.[A-Я]\.", "[А-Я][а-я]+\s[А-Я]\."], re.match(r"\d{1,}\.", self.sourse).span()[1])
+
+        template = ',\s\d{4}(?=\.\s[\-–]|\s[(])'
+        self.age = re.search(template, self.sourse)
+        pages = re.search("\.\s[\-–]\s\d{1,}\s",self.sourse[self.age.span()[0]:-1])
+        if (pages is None):
+            self.fails.append("Страницы указаны не верно")
+        if (self.age is None):
+            self.fails.append("Не указан или не правильно оформлен год выпуска")
+        self.title = self.sourse[start:self.age.span()[0]]
+        city = self.title[self.title.rfind('. -') if (self.title.rfind('. -')>0) else self.title.rfind('. –'):len(self.title)]
+        cityReduce = {
+            'Москва': 'М.',
+            'Ленинград':'Л.', 
+            'Санкт-Петербург':'СПб', 
+            'Нижний Новгород':"Н. Новогород", 
+            'Ростов-на-Дону':"Ростов н/Д"
+        }
+        for i in cityReduce:
+            if (city.find(i) > 0):
+                self.fails.append(f"{i} необходимо сократить до {cityReduce[i]}")
+        if (city == "" or city.find(':') < 0):
+            self.fails.append("Место издания должно быть указано корректно")
+        
+        self.title = self.title.replace(city, '')
+        check = True
+        if (self.title.rfind('/ Под ред.') > 0):
+            start = self.__checkFIO(["[А-Я]\.\s[A-Я]\.\s[А-Я][а-я]+", "[А-Я]\.[A-Я]\.\s[А-Я][а-я]+"], start = self.sourse.find('/ Под ред.') + len('/ Под ред.'))
+            check = False
+        if (self.title.rfind(':') > 0):
+            publish = ['учебник', "монография", "учеб. пособие"]
+            if not(publish[0] in self.title or publish[1] in self.title or publish[2] in self.title):
+                self.fails.append("Тип книги {publish} не найден")
+            check = False
+        if (check):
+           self.fails.append("Название или издательство записаны неверно")
 
 
-def internetRes(sourse: str):
-    num = sourse[0:sourse.find('.')]
-    exc, sourse = checkURL(sourse)
-    if (exc is not None):
-        return num + "\t" + exc
-    #Не проверяется название.
-    return f"{num}\tОформлен в соответсвие с правилами"
+    def __checkURL(self):
+        dataCall = re.search("[(]дата обращения: \d{2}\.\d{2}\.\d{4}[)].", fullText)
+        if (dataCall is None):
+            return "Дата обращения не найдена или оформлена не правильно", ""
+        template = ".\s[-–]\sURL: (?P<url>https?://[^\s]+)"
+        fullURL = re.search(template,fullText)
+        if (fullURL is not None):
+            URL = fullURL.group("url")
+        try:
+            urllib.request.urlopen(URL).getcode()
+        except:
+            return f"Сайт не доступен в данный момент либо указан неверно", ""
+        fullText = fullText.replace(fullURL[0] + " " + dataCall[0],"")
+        return None, fullText
+
+
+    def __internetRes(self, sourse: str):
+        num = sourse[0:sourse.find('.')]
+        exc, sourse = self.__checkURL(sourse)
+        if (exc is not None):
+            return num + "\t" + exc
+        #Не проверяется название.
+        return f"{num}\tОформлен в соответсвие с правилами"
 
 
 # « »  
