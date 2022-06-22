@@ -8,14 +8,14 @@ def text_and_nbiblio(way):
     i = 0
     zagl = []
     flg = 0
-    while (i < len(str)): #(flg != 2) or 
+    while (i < len(str)):
         if (flg == 1):
-            if ('Заключение' in str[i]):
-                zagl.append(re.sub("[0-9]+|[\.]", "", str[i]).strip())
+            if ('Заключение'.lower() in str[i].lower()):
+                zagl.append(re.sub("[0-9]+|[\.]", "", str[i].lower()).strip())
                 break
             if (str[i] != ''):
-                zagl.append(re.sub("[0-9]+|[\.]", "", str[i]).strip())    
-        if (re.sub("[0-9]+|[\.]", "", str[i]).strip() == 'Введение'):
+                zagl.append(re.sub("[0-9]+|[\.]", "", str[i].lower()).strip())    
+        if (re.sub("[0-9]+|[\.]", "", str[i].lower()).strip() == 'Введение'.lower()):
             flg = 1
         i = i + 1
     document = Document(way)
@@ -25,7 +25,7 @@ def text_and_nbiblio(way):
     j = 0
     text_biblio = []
     for paragraph in document.paragraphs:
-        if (zagl[num_abzac] == re.sub("[0-9]+|[\.]", "", paragraph.text).strip()):
+        if (zagl[num_abzac] == re.sub("[0-9]+|[\.]", "", paragraph.text).strip().lower()):
             num_abzac = num_abzac+1
             if (num_abzac >= len(zagl)):
                 break
@@ -37,11 +37,13 @@ def text_and_nbiblio(way):
                     bool = 1
                     text_biblio.append(['',''])
                     text_biblio[j][1] = temp
+                    print(temp)
                     temp = ''
                 elif abz[i] == ']':
                     bool = 0
                     text_biblio.append(['',''])
                     text_biblio[j][0] = temp
+                    print(temp)
                     j = j+1
                     temp = ''
                     i = i+1
@@ -49,11 +51,12 @@ def text_and_nbiblio(way):
                     temp = temp+abz[i]
                 i = i+1
             abz = ''
-    return text_biblio      #порядок данных: Текст, Номер источника
+    return text_biblio      #порядок данных в двумерном массиве: Ссылка на источник (номер), Текст
 
 #######
-r = 'd:/Сибгути/1 курс/Экономика/Курсовая Дефицит бюджета (ИИ-051 Носков Кирилл).docx'
-end = text_and_nbiblio(r)   #можно переделать на двумерный массив возвращающиеся данные 
-print(end)
+#r = 'd:/Сибгути/1 курс/Экономика/Курсовая Дефицит бюджета (ИИ-051 Носков Кирилл).docx'
+r = 'd:/РГЗ Вариант 13 (ИИ-051 Носков Кирилл).docx'
+end = text_and_nbiblio(r)
+#print(end)
 
     
