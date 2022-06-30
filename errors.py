@@ -100,10 +100,11 @@ def num_pages(way):
         return (pages) 
     os.remove(temp_pdf)
 
-r = 'd:/РГЗ Вариант 13 (ИИ-051 Носков Кирилл).docx'
-#r = 'd:/Сибгути/1 курс/Экономика/Курсовая Дефицит бюджета (ИИ-051 Носков Кирилл).docx'
+if __name__ == "__main__":
+    r = 'd:/РГЗ Вариант 13 (ИИ-051 Носков Кирилл).docx'
+    #r = 'd:/Сибгути/1 курс/Экономика/Курсовая Дефицит бюджета (ИИ-051 Носков Кирилл).docx'
 
-fg = errors(r)
-if fg != []:
-    print (fg)
-#num_pages(r)
+    fg = errors(r)
+    if fg != []:
+        print (fg)
+    #num_pages(r)
