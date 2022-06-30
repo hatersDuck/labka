@@ -15,42 +15,44 @@ class dataFile(object):
         self.data.Data = base64.b64encode(open(filename, "rb").read()).decode()
         self.data.FileName = os.path.splitext(filename)[0]
         self.data.FileType = os.path.splitext(filename)[1]
-        self.data.ExternalUserID = self.data.FileName.split("/")[-1]
+        self.data.ExternalUserID = self.data.FileName.split("/")[-1] #ID кто загружал #########
 
 # Создать клиента сервиса(https)
+
 class clientAPI(object):
     def __init__(self, login:str, password:str, company_name:str, API_adress:str):
         #Подключение к API
         self.client = suds.client.Client("https://%s/apiCorp/%s?singleWsdl" % (API_adress, company_name),
                                     username=login,
                                     password=password)
+        
     @classmethod
     def fromCFG(cls, access):
         import configparser
         config = configparser.ConfigParser()
         config.read('config.ini', encoding='utf-8-sig')
 
-        APICORP_ADDRESS = config.get(access, "APICORP_ADDRESS").replace('"', "")
-        COMPANY_NAME = config.get(access, "COMPANY_NAME").replace('"', "")
-        LOGIN = config.get(access, "LOGIN").replace('"', "")
-        PASSWORD = config.get(access, "PASSWORD").replace('"', "")
+        APICORP_ADDRESS = config.get(access, "APICORP_ADDRESS")
+        COMPANY_NAME = config.get(access, "COMPANY_NAME")
+        LOGIN = config.get(access, "LOGIN")
+        PASSWORD = config.get(access, "PASSWORD")
         return cls(LOGIN, PASSWORD, COMPANY_NAME, APICORP_ADDRESS)
 
     def simple_check(self, filename):
-        print("SimpleCheck filename=" + filename)
         # Описание загружаемого файла
         data = dataFile(filename, self.client).data
-
+        
         docatr = self.client.factory.create("DocAttributes")
         personIds = self.client.factory.create("PersonIDs")
         personIds.CustomID = "original"
 
         arr = self.client.factory.create("ArrayOfAuthorName")
 
+        #F_I_O_051
         author = self.client.factory.create("AuthorName")
         author.OtherNames = "Иван Иванович"
         author.Surname = "Иванов"
-        author.PersonIDs = personIds
+        author.PersonIDs = personIds #ID автора документа
 
         arr.AuthorName.append(author) 
         
@@ -87,8 +89,8 @@ class clientAPI(object):
 
         # Получить краткий отчет
         report = self.client.service.GetReportView(id)
-
-        print("Report Summary: %0.2f%%" % (report.Summary.Score,))
+        self.score = report.Summary.Score
+        return report.Summary.Score
         for checkService in report.CheckServiceResults:
             # Информация по каждому поисковому модулю
             print("Check service: %s, Score.White=%0.2f%% Score.Black=%0.2f%%" %
@@ -120,6 +122,6 @@ class clientAPI(object):
             fullreport.Attributes.DocumentDescription.Authors.AuthorName[0].PersonIDs.CustomID))
     
 
-
-API_con1 = clientAPI.fromCFG("API_access_1")
-API_con1.simple_check("/home/danila/codes/clones/labka/testFiles/pz2.pdf")
+if __name__ == "__main__":
+    API_con1 = clientAPI.fromCFG("API_access_1")
+    print(API_con1.simple_check("/home/danila/codes/clones/labka/testFiles/pz2.pdf"))
