@@ -6,6 +6,6 @@
 - [hatersDuck](https://vk.com/hatersduck)
 - [Krulia](https://vk.com/q4b668f75)
 
-## Список стороних библиотек
+## Список сторонних библиотек
 pymorphy2
 re

@@ -100,10 +100,34 @@ def num_pages(way):
         return (pages) 
     os.remove(temp_pdf)
 
+def student_group(way):
+    my_text = docx2txt.process(way)
+    str = my_text.splitlines()
+    text = ['Выполнил:', 'Группа:', 'гр.', 'введение']
+    i = 0
+    res = []
+    while (i < len(str)):
+        txt = str[i]
+        if (text[0] in txt):
+            v = (re.sub(f'{text[0]}', "", str[i]).strip()).split(' ')
+            v = v[0]+' '+v[1][0]+'. '+v[2][0]+'.'
+            res.append(v)
+        elif (text[1] in txt):
+            v = re.sub(f'{text[1]}+|{text[2]}', "", str[i]).strip()
+            res.append(v)
+        elif (text[2] in txt):
+            v = txt.partition(f'{text[2]}')[2].strip()
+            res.append(v)
+        if (txt.lower().split == text[3]):
+            break
+        i = i+1
+    return res
+            
+
 r = 'd:/РГЗ Вариант 13 (ИИ-051 Носков Кирилл).docx'
 #r = 'd:/Сибгути/1 курс/Экономика/Курсовая Дефицит бюджета (ИИ-051 Носков Кирилл).docx'
 
-fg = errors(r)
+fg = student_group(r)
 if fg != []:
     print (fg)
 #num_pages(r)
