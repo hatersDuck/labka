@@ -34,7 +34,9 @@ templ = {
     'title': 
         "[А-Я].*?[\.\:/]",
     'type': 
-        '\s?((учебник\.)|(монография\.)|(учеб\.\sпособие\.)|(учебник\.))',
+        '\s?((учебник\.)'+
+        '|(монография\.)'+
+        '|(учеб((\.)|(ное))\sпособие[\.\s](для\sвузов)?))',
     'city': 
         '\s?[\-–]\s?((М\.)|(Л\.)|(СПб\.)|(Н\.\sНовгород)|(Ростов\sн\/Д/.)|([А-Я].*?[\:\s]))',
     'iz': 
@@ -76,6 +78,9 @@ class checkBiblio(object):
     def __init__(self, sourse):
         self.source = sourse
         self.status = False
+        
+        number = re.search('\d{1,}[\s,\.]', sourse)
+        self.number = number[0] if number else '-1.'
 
         for j in templates:
             if (re.search(j, sourse)):
@@ -85,11 +90,8 @@ class checkBiblio(object):
         if (re.search(templ['URL'], sourse)):
             pass #urlib.request
 
-    def __str__(self) -> str:
-        return ['Не подходит', 'Подходит'][self.status]
-
     def __repr__(self) -> str:
-        return self.source    
+        return ['Не подходит', 'Подходит'][self.status]    
 
     def __bool__(self) -> bool:
         return self.status
