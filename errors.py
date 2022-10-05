@@ -96,9 +96,9 @@ def num_pages(way):
     convert(way, temp_pdf)
     with open(temp_pdf, "rb") as filehandle:  
         pdf = PdfFileReader(filehandle)
-        pages = pdf.getNumPages()
-        return (pages) 
+        pages = pdf.getNumPages() 
     os.remove(temp_pdf)
+    return (pages) 
 
 def student_group(way):
     my_text = docx2txt.process(way)
@@ -131,7 +131,7 @@ r = 'd:/Реферат+по+финансовому+менеджменту.docx'
 #r = 'd:/Курсовая Дефицит бюджета (ИИ-051 Носков Кирилл).docx'
 #r = 'd:/РГЗ Вариант 13 (ИИ-051 Носков Кирилл).docx'
 
-fg = errors(r)
+fg = num_pages(r)
 if fg != []:
     print (fg)
 #num_pages(r)
