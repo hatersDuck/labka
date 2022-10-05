@@ -4,8 +4,8 @@ import re
 def find_par(document, text):
     num_par = 0
     for paragraph in document.paragraphs:
-        if (text in paragraph.text.strip()):
-            if ((len(paragraph.text.strip()) - len(text)) == 0):
+        if (text.lower() in paragraph.text.strip().lower()):
+            if ((len(paragraph.text.strip().lower()) - len(text)) == 0):
                 return num_par
         num_par = num_par + 1
     return -1
@@ -39,6 +39,6 @@ def find_biblio(way):
         return k.split() 
 
 ####### 
-r = 'd:/Сибгути/1 курс/Экономика/Курсовая Дефицит бюджета (ИИ-051 Носков Кирилл).docx'
+r = 'd:/РГЗ Вариант 13 (ИИ-051 Носков Кирилл).docx'
 l = find_biblio(r) 
 print(l)   

@@ -19,31 +19,26 @@ def text_and_nbiblio(way):
             flg = 1
         i = i + 1
     document = Document(way)
-    num_abzac = 0
+    num_glav = 0
     abz = ''
     temp = ''
     j = 0
     text_biblio = []
     for paragraph in document.paragraphs:
-        if (zagl[num_abzac] == re.sub("[0-9]+|[\.]", "", paragraph.text).strip().lower()):
-            num_abzac = num_abzac+1
-            if (num_abzac >= len(zagl)):
-                break
-        elif (num_abzac != 0):
+        if (num_glav >= len(zagl)):
+            break
+        if (zagl[num_glav] == re.sub("[0-9]+|[\.]", "", paragraph.text).strip().lower()):
+            num_glav = num_glav+1
+        elif (num_glav != 0):
             abz = abz+paragraph.text
             i = 0
             while i < len(abz):
                 if abz[i] == '[':
-                    bool = 1
                     text_biblio.append(['',''])
                     text_biblio[j][1] = temp
-                    print(temp)
                     temp = ''
                 elif abz[i] == ']':
-                    bool = 0
-                    text_biblio.append(['',''])
                     text_biblio[j][0] = temp
-                    print(temp)
                     j = j+1
                     temp = ''
                     i = i+1
@@ -57,6 +52,6 @@ def text_and_nbiblio(way):
 #r = 'd:/Сибгути/1 курс/Экономика/Курсовая Дефицит бюджета (ИИ-051 Носков Кирилл).docx'
 r = 'd:/РГЗ Вариант 13 (ИИ-051 Носков Кирилл).docx'
 end = text_and_nbiblio(r)
-#print(end)
+print(end)
 
     

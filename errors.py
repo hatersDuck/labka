@@ -67,7 +67,7 @@ def errors(way):
     if flg == 0:
         errors.append('Неправильные поля')
     if (s[0] != 1 or s[1] != 1):
-        errors.append('Ошибка в нумерации')
+        errors.append('Ошибка в нумерации страниц')
        
     flg = 0
     for paragraph in document.paragraphs:
@@ -89,6 +89,7 @@ def errors(way):
             break
         if (paragraph.text.strip().lower() == 'введение'):
             flg = 1
+    print (zagl)
     return errors
 
 def num_pages(way):
@@ -103,7 +104,7 @@ def num_pages(way):
 def student_group(way):
     my_text = docx2txt.process(way)
     str = my_text.splitlines()
-    text = ['Выполнил:', 'Группа:', 'гр.', 'введение']
+    text = ['Выполнил:', 'Группа:', 'гр.', 'содержание']
     i = 0
     res = []
     while (i < len(str)):
@@ -125,13 +126,13 @@ def student_group(way):
             
 
 #r = 'd:/Реферат+история.docx'
-r = 'd:/Реферат+по+финансовому+менеджменту.docx'
+#r = 'd:/Реферат+по+финансовому+менеджменту.docx'
 
 #r = 'd:/Искусственое_осеменение_лекция_Автосохраненный.docx'
 #r = 'd:/Курсовая Дефицит бюджета (ИИ-051 Носков Кирилл).docx'
-#r = 'd:/РГЗ Вариант 13 (ИИ-051 Носков Кирилл).docx'
+r = 'd:/РГЗ Вариант 13 (ИИ-051 Носков Кирилл).docx'
 
-fg = num_pages(r)
+fg = errors(r)
 if fg != []:
     print (fg)
 #num_pages(r)
