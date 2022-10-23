@@ -52,7 +52,7 @@ templ = {
 }
 
 
-def createBib(template):
+def createBiblio(template):
     temp = "("
     for i in template['start']:
         temp += "(" + i + ')|'
@@ -72,7 +72,7 @@ def createBib(template):
 
 import re
 import urllib.request
-templates = createBib(templ)
+templates = createBiblio(templ)
 class checkBiblio(object):
     
     def __init__(self, sourse):

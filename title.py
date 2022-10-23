@@ -21,7 +21,7 @@ import re
 from biblio import checkBiblio
 
 class checkDocument():
-    def __init__(self, way) -> None:
+    def __Init__(self, way) -> None:
 
         """
 
@@ -46,21 +46,20 @@ class checkDocument():
         return "\n".join(self.errorsTitle)
 
     def __titleInfo__(self):
-        i = 0
         base_errors = [0,0,0,0,0] #содержание, введение, заключение, список литературы
         text_errors = ['содержание', 'введение', 'заключение', 'список литературы', 'cписок использованных источников']
         zagl = []
         self.errorsTitle = []
+        i = 0
         flg = 0
         k = 0
-        while (i < len(self.strf)):
+        for i in range(len(self.strf)):
             txt = re.sub("[0-9]+|[\.]", "", self.strf[i].lower()).strip()
             j = 0
-            while (j < len(text_errors)):
+            for j in range(len(text_errors)):
                 if (txt == text_errors[j]):
                     base_errors[j]+=1
                     flg = 1
-                j += 1
             
             if (txt in zagl):
                 k += 1
@@ -68,13 +67,12 @@ class checkDocument():
                 flg = 2
             if (flg == 1):
                 zagl.append(txt) if txt else zagl
-            i += 1
         flg = 0
         if (k+1 != len(zagl)):
             flg = 1   
 
         i = 0
-        while (i < len(base_errors)-1): #### ошибки ключевых заголовков
+        for i in range(len(base_errors)-1): #### ошибки ключевых заголовков
             if (i == 0):
                 if (base_errors[i] == 0):
                     flg = 1
@@ -84,7 +82,6 @@ class checkDocument():
             else:
                 if (base_errors[i] != 2) and (base_errors[i+1] != 2):
                     flg = 1
-            i += 1
         if (flg == 1):
             self.errorsTitle.append('Ошибка в заголовках или содержании')
 
@@ -132,7 +129,7 @@ class checkDocument():
         text = ['Выполнил:', 'Группа:', 'гр.', 'введение']
         i = 0
         self.studentInfo = []
-        while (i < len(self.strf)):
+        for i in range(len(self.strf)):
             txt = self.strf[i]
             if (text[0] in txt):
                 v = (re.sub(f'{text[0]}', "", self.strf[i]).strip()).split(' ')
@@ -146,15 +143,14 @@ class checkDocument():
                 self.studentInfo.append(v)
             if (txt.lower().split == text[3]):
                 break
-            i += 1
 
     def __biblioInfo__(self):
         i = 0
 
         maxi = max(
-            find_par('Список литературы', self.document), 
-            find_par('Список использованных источников', self.document),
-            find_par('Библиографический список', self.document)
+            findParagraph('Список литературы', self.document), 
+            findParagraph('Список использованных источников', self.document),
+            findParagraph('Библиографический список', self.document)
         )
         if maxi == -1:
             self.biblio = 'Отсутствуют источники или их заголовок задан неверно' 
@@ -173,7 +169,7 @@ class checkDocument():
 
 
 
-def find_par(text, document):
+def findParagraph(text, document):
     num_par = 0
     for paragraph in document.paragraphs:
         if (text.lower() in paragraph.text.strip().lower()):
