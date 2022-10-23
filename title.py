@@ -21,7 +21,7 @@ import re
 from biblio import checkBiblio
 
 class checkDocument():
-    def __Init__(self, way) -> None:
+    def __init__(self, way) -> None:
 
         """
 
@@ -182,7 +182,7 @@ def findParagraph(text, document):
 if __name__ == '__main__':
     import glob
     checkDocuments = []
-    for i in glob.glob('/home/danila/Test/docx/*.docx'):
+    for i in glob.glob('./test_document/*.docx'):
         checkDocuments.append(checkDocument(i))
 
     for i in checkDocuments:
