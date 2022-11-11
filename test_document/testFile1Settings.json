@@ -1,0 +1,21 @@
+{
+    "Path-to-file": "./test_document/testFile1(1.5).docx",
+    "Font": "Times New Roman",
+    "Font-size__Title_pt": 18,
+    "Font-size__Sub-title_pt": 16,
+    "Font-size__Content-text_pt": 14,
+    "Padding__Top_mm": 20,
+    "Padding__Right_mm": 10,
+    "Padding__Bottom_mm": 20,
+    "Padding__Left_mm": 20,
+    "Paragrapf-indentation_cm": 1.25,
+    "Line-interval": 1.5,
+    "Work-structure": {
+        "Title-page": true,
+        "Contents": true,
+        "Introduction": true,
+        "Conclusion": true,
+        "List-of-literature": true,
+        "Supplement": true
+    }
+}
